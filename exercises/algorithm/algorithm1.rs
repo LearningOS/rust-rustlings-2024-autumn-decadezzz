@@ -2,7 +2,7 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
+
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -47,7 +47,7 @@ impl<T> LinkedList<T> {
     pub fn add(&mut self, obj: T) {
         let mut node = Box::new(Node::new(obj));
         node.next = None;
-        let node_ptr = Some(unsafe { NonNull::new_unchecked(Box::into_raw(node)) });
+        let node_ptr: Option<NonNull<Node<T>>> = Some(unsafe { NonNull::new_unchecked(Box::into_raw(node)) });
         match self.end {
             None => self.start = node_ptr,
             Some(end_ptr) => unsafe { (*end_ptr.as_ptr()).next = node_ptr },
@@ -69,14 +69,41 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self     where
+    T: Ord+Copy,
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+        let mut merged_list = LinkedList::new();
+        let mut a = list_a.start;
+        let mut b = list_b.start;
+
+        while a.is_some() || b.is_some() {
+
+            match (a, b) {
+                (Some(a_value), Some(b_value))  => {
+                    if unsafe {(*a_value.as_ptr()).val<=(*b_value.as_ptr()).val}
+                    {
+                        merged_list.add(unsafe {(*a_value.as_ptr()).val});
+                        a = unsafe { (*a.unwrap().as_ptr()).next };                         
+                    }
+                    else 
+                    {
+                        merged_list.add(unsafe {(*b_value.as_ptr()).val});
+                        b = unsafe { (*b.unwrap().as_ptr()).next };                          
+                    }
+                }
+                (Some(a_value), None) => {
+                    merged_list.add(unsafe {(*a_value.as_ptr()).val});
+                    a = unsafe { (*a.unwrap().as_ptr()).next }; // Only list_a has nodes left
+                }
+                (None, Some(b_value)) => {
+                    merged_list.add(unsafe {(*b_value.as_ptr()).val});
+                    b = unsafe { (*b.unwrap().as_ptr()).next }; // Only list_b has nodes left
+                }
+                _ => {}
+            }
         }
+
+        merged_list
 	}
 }
 
